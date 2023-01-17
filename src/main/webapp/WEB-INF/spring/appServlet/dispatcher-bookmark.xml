@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:mvc="http://www.springframework.org/schema/mvc"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xsi:schemaLocation="http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc-4.3.xsd
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+		http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-4.3.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+
+	<mvc:annotation-driven></mvc:annotation-driven>
+
+	<!-- [1] DataSource빈 선언 -->
+	<bean id="dataSource"
+		class="org.springframework.jdbc.datasource.DriverManagerDataSource">
+		<property name="driverClassName"
+			value="oracle.jdbc.OracleDriver" />
+		<property name="url"
+			value="jdbc:oracle:thin:@127.0.0.1:1521:xe" />
+		<property name="username" value="hr" />
+		<property name="password" value="a1234" />
+	</bean>
+
+	<!-- [2] SqlSessionFactoryBean -->
+	<bean id="sqlSessionFactory"
+		class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="dataSource" ref="dataSource" />
+		<property name="mapperLocations">
+			<list>
+				<value>classpath:config/bookmarkMapper.xml</value>
+			</list>
+		</property>
+	</bean>
+
+	<!-- [3] SqlSessionTemplate -->
+	<bean id="sqlSession"
+		class="org.mybatis.spring.SqlSessionTemplate">
+		<constructor-arg ref="sqlSessionFactory" />
+	</bean>
+
+	<!-- [4] DAO -->
+	<bean id="dao" class="dao.BookmarkDaoImp">
+		<property name="sqlSession" ref="sqlSession" />
+	</bean>
+
+	<!-- [5] Service -->
+	<bean id="service" class="service.BookmarkServiceImp">
+		<property name="dao" ref="dao" />
+	</bean>
+
+	<!-- [6] Controller -->
+	<bean class="controller.BookmarkController">
+		<property name="service" ref="service" />
+	</bean>
+
+	<!-- [7] 선언적 트랜잭션:<tx:advice>태그를 이용한 트랜잭션처리 -->
+<!-- 	<tx:advice id="txAdvice" transaction-manager="transactionManager"> -->
+<!-- 		<tx:attributes> -->
+<!-- 			<tx:method name="*Process" -->
+<!-- 				rollback-for="org.springframework.dao.DuplicateKeyException" /> -->
+<!-- 			<tx:method name="*Process" -->
+<!-- 				rollback-for="java.lang.Exception" /> -->
+<!-- 		</tx:attributes> -->
+<!-- 	</tx:advice> -->
+
+<!-- 	<aop:config> -->
+<!-- 		<aop:advisor advice-ref="txAdvice" -->
+<!-- 			pointcut="execution(* service.Bookmark*.*(..))" /> -->
+<!-- 	</aop:config> -->
+
+	<!-- [8] View -->
+	<bean id="jsonView"
+		class="org.springframework.web.servlet.view.json.MappingJackson2JsonView">
+		<property name="contentType"
+			value="application/json;charset=UTF-8" />
+	</bean>
+
+	<bean
+		class="org.springframework.web.servlet.view.BeanNameViewResolver">
+		<property name="order" value="1" />
+	</bean>
+
+	<bean
+		class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+		<property name="prefix" value="/WEB-INF/views/" />
+		<property name="suffix" value=".jsp" />
+		<property name="order" value="2" />
+	</bean>
+</beans>
+
+
+
+
